@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Release Calendar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --text: #2c3e50;
+      --card: #ffffff;
+      --header-bg: linear-gradient(to right, #2980b9, #6dd5fa);
+      --accent: #3498db;
+      --accent-hover: #2980b9;
+      --border: #ecf0f1;
+      --cell-hover: #f1f8ff;
+      --popup-bg: #fff;
+    }
+
+    body.dark {
+      --bg: #1e1e2f;
+      --text:rgb(219, 43, 43);
+      --card: #2c2f4a;
+      --header-bg: linear-gradient(to right, #1e3c72, #2a5298);
+      --accent: #4aa3ff;
+      --accent-hover: #2a75c7;
+      --border: #3a3a4a;
+      --cell-hover: #2e3c55;
+      --popup-bg: #2f354a;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--header-bg);
+      padding: 20px 30px;
+      border-radius: 0 0 12px 12px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+
+    h2 a {
+      text-decoration: none;
+      color: white;
+      background-color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin: 0 5px;
+      transition: background-color 0.3s;
+      font-size: 14px;
+    }
+
+    h2 a:hover {
+      background-color: var(--accent-hover);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    th {
+      background-color: var(--accent);
+      color: white;
+      padding: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    td {
+      border: 1px solid var(--border);
+      text-align: center;
+      width: 14.28%;
+      height: 100px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    td:hover {
+      background-color: var(--cell-hover);
+      transform: scale(1.02);
+    }
+
+    .calendar-cell {
+      padding: 8px;
+    }
+
+    .today {
+      border: 2px solid var(--accent);
+      font-weight: bold;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--popup-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: none;
+      z-index: 100;
+      min-width: 300px;
+      max-width: 500px;
+      animation: fadeIn 0.3s ease;
+      color: var(--text);
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 20px;
+      color: #e74c3c;
+      cursor: pointer;
+    }
+
+    .popup-close:hover {
+      color: #c0392b;
+    }
+
+    #popup-content h3 {
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 8px;
+    }
+
+    #popup-content ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #popup-content li {
+      background-color: var(--cell-hover);
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 99;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9) translate(-50%, -50%); }
+      to { opacity: 1; transform: scale(1) translate(-50%, -50%); }
+    }
+
+    @media (max-width: 768px) {
+      td {
+        height: 60px;
+        font-size: 12px;
+      }
+
+      .popup {
+        width: 90%;
+        max-width: none;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .title {
+        text-align: left;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Catalog Metadata Support</div>
+    <h1 class="title">Release Calendar</h1>
+    <button class="theme-toggle" id="themeToggle">🌗</button>
+  </div>
+
+  <div class="container">
+    <h2>
+      <a href="?month={{ prev_month }}&year={{ prev_year }}">&laquo; Prev</a>
+      {{ month }}/{{ year }}
+      <a href="?month={{ next_month }}&year={{ next_year }}">Next &raquo;</a>
+    </h2>
+
+    {{ calendar|safe }}
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="popup" id="popup">
+    <span class="popup-close" onclick="closePopup()">✖</span>
+    <div id="popup-content"></div>
+  </div>
+
+  <script>
+    const statusData = {{ status_data|safe }};
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const date = cell.getAttribute('data-date');
+        const data = statusData[date];
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        const content = document.getElementById('popup-content');
+
+        if (data) {
+          content.innerHTML = `
+            <h3>Details for ${date}</h3>
+            <ul>
+              <li><strong>Slapi Stage:</strong> ${data["Slapi Stage"] || 'N/A'}</li>
+              <li><strong>Slapi Status:</strong> ${data["Slapi status"] || 'N/A'}</li>
+              <li><strong>Actual Release Date:</strong> ${data["Actual Release Date"] || 'N/A'}</li>
+              <li><strong>Expected Release Date:</strong> ${data["Expected Release Date"] || 'N/A'}</li>
+            </ul>
+          `;
+        } else {
+          content.innerHTML = `<h3>${date}</h3><p>No data available.</p>`;
+        }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+      });
+    });
+
+    document.getElementById('overlay').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+    // Theme toggle logic
+    const toggleButton = document.getElementById('themeToggle');
+    const rootBody = document.body;
+
+    function setTheme(mode) {
+      if (mode === 'dark') {
+        rootBody.classList.add('dark');
+        toggleButton.textContent = '☀️';
+      } else {
+        rootBody.classList.remove('dark');
+        toggleButton.textContent = '🌗';
+      }
+      localStorage.setItem('theme', mode);
+    }
+
+    toggleButton.addEventListener('click', () => {
+      const isDark = rootBody.classList.contains('dark');
+      setTheme(isDark ? 'light' : 'dark');
+    });
+
+    // Load user preference
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+  </script>
+</body>
+</html>

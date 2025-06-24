@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Release Calendar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{ % static 'calendar_app/style.css' %}">
+  <link rel="stylesheet" href="{% static 'calendar_app/style.css' %}">
+</head>
+<body class="light">
+
+  <div class="header">
+    <div class="logo">📘 Catalog Metadata Support</div>
+    <h1 class="title">Release Calendar</h1>
+    <button id="theme-toggle">🌙 Dark Mode</button>
+  </div>
+
+  <div class="container">
+    <h2>
+      <a href="?month={{ prev_month }}&year={{ prev_year }}">&laquo; Prev</a>
+      {{ month }}/{{ year }}
+      <a href="?month={{ next_month }}&year={{ next_year }}">Next &raquo;</a>
+    </h2>
+
+    {{ calendar|safe }}
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="popup" id="popup">
+    <span class="popup-close" onclick="closePopup()">✖</span>
+    <div id="popup-content"></div>
+  </div>
+
+   <div style="text-align: center; margin-bottom: 20px;">
+  <span style="display: inline-block; width: 16px; height: 16px; background-color: green; border-radius: 4px; vertical-align: middle; margin-right: 6px;"></span>
+  <span style="margin-right: 20px;">Success</span>
+  <span style="display: inline-block; width: 16px; height: 16px; background-color: red; border-radius: 4px; vertical-align: middle; margin-right: 6px;"></span>
+  <span>Failed</span>
+</div>
+
+  <script>
+    const statusData = {{ status_data|safe }};
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const date = cell.getAttribute('data-date');
+        const data = statusData[date];
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        const content = document.getElementById('popup-content');
+
+        if (data) {
+          content.innerHTML = `
+            <h3>Details for ${date}</h3>
+            <ul>
+              <li><strong>Slapi Stage:</strong> ${data["Slapi Stage"] || 'N/A'}</li>
+              <li><strong>Slapi Status:</strong> ${data["Slapi status"] || 'N/A'}</li>
+              <li><strong>Actual Release Date:</strong> ${data["Actual Release Date"] || 'N/A'}</li>
+              <li><strong>Expected Release Date:</strong> ${data["Expected Release Date"] || 'N/A'}</li>
+            </ul>
+          `;
+        } else {
+          content.innerHTML = `<h3>${date}</h3><p>No data available.</p>`;
+        }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+      });
+    });
+
+    document.getElementById('overlay').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePopup();
+    });
+
+    // Theme toggle logic
+    const toggleBtn = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    function setTheme(theme) {
+      body.className = theme;
+      localStorage.setItem('theme', theme);
+      toggleBtn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const newTheme = body.classList.contains('dark') ? 'light' : 'dark';
+      setTheme(newTheme);
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+  </script>
+
+</body>
+</html>

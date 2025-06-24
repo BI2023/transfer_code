@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Release Calendar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #eef2f7;
+      color: #333;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to right, #3498db, #6dd5fa);
+      padding: 20px 30px;
+      border-radius: 0 0 20px 20px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 600;
+      flex: 1;
+      text-align: right;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px 25px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 20px;
+      color: #2c3e50;
+    }
+
+    h2 a {
+      text-decoration: none;
+      background-color: #3498db;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      margin: 0 6px;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    h2 a:hover {
+      background-color: #2980b9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #2980b9;
+      color: white;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    td {
+      border: 1px solid #e3e7ec;
+      width: 14.28%;
+      height: 100px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      vertical-align: top;
+    }
+
+    td:hover {
+      background-color: #f2f9ff;
+      transform: scale(1.03);
+    }
+
+    .calendar-cell {
+      padding: 8px;
+    }
+
+    .today {
+      border: 2px solid #3498db;
+      font-weight: bold;
+      background-color: #ebf5fb;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 100;
+      min-width: 300px;
+      max-width: 500px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 20px;
+      color: #e74c3c;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .popup-close:hover {
+      color: #c0392b;
+    }
+
+    #popup-content h3 {
+      color: #2c3e50;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    #popup-content ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #popup-content li {
+      background-color: #f9fbfd;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 5px solid #3498db;
+      border-radius: 6px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 99;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translate(-50%, -50%);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translate(-50%, -50%);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .title {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      td {
+        height: 70px;
+        font-size: 12px;
+      }
+
+      .popup {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">📘 Catalog Metadata Support</div>
+    <h1 class="title">Release Calendar</h1>
+  </div>
+
+  <div class="container">
+    <h2>
+      <a href="?month={{ prev_month }}&year={{ prev_year }}">&laquo; Prev</a>
+      {{ month }}/{{ year }}
+      <a href="?month={{ next_month }}&year={{ next_year }}">Next &raquo;</a>
+    </h2>
+
+    {{ calendar|safe }}
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="popup" id="popup">
+    <span class="popup-close" onclick="closePopup()">✖</span>
+    <div id="popup-content"></div>
+  </div>
+
+  <script>
+    const statusData = {{ status_data|safe }};
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const date = cell.getAttribute('data-date');
+        const data = statusData[date];
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        const content = document.getElementById('popup-content');
+
+        if (data) {
+          content.innerHTML = `
+            <h3>Details for ${date}</h3>
+            <ul>
+              <li><strong>Slapi Stage:</strong> ${data["Slapi Stage"] || 'N/A'}</li>
+              <li><strong>Slapi Status:</strong> ${data["Slapi status"] || 'N/A'}</li>
+              <li><strong>Actual Release Date:</strong> ${data["Actual Release Date"] || 'N/A'}</li>
+              <li><strong>Expected Release Date:</strong> ${data["Expected Release Date"] || 'N/A'}</li>
+            </ul>
+          `;
+        } else {
+          content.innerHTML = `<h3>${date}</h3><p>No data available.</p>`;
+        }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+      });
+    });
+
+    document.getElementById('overlay').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePopup();
+    });
+  </script>
+
+</body>
+</html>

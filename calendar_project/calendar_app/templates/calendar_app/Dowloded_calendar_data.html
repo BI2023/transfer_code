@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Beautiful Calendar with Events</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    h2 a {
+      text-decoration: none;
+      color: white;
+      background-color: #3498db;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+      font-size: 14px;
+    }
+
+    h2 a:hover {
+      background-color: #2980b9;
+    }
+
+    .export-btn {
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 10px 18px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .export-btn:hover {
+      background-color: #27ae60;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+      padding: 16px;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    td {
+      border: 1px solid #ecf0f1;
+      text-align: center;
+      width: 14.28%;
+      height: 100px;
+      transition: background 0.3s, transform 0.2s;
+      position: relative;
+      cursor: pointer;
+      vertical-align: top;
+      padding: 5px;
+    }
+
+    td:hover {
+      background-color: #f1f8ff;
+      transform: scale(1.02);
+    }
+
+    .calendar-cell .date {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .event-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin: 3px;
+    }
+
+    .dot-present { background-color: #2ecc71; }
+    .dot-absent { background-color: #e74c3c; }
+    .dot-holiday { background-color: #f39c12; }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: none;
+      z-index: 100;
+      min-width: 300px;
+      max-width: 500px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 20px;
+      color: #e74c3c;
+      cursor: pointer;
+    }
+
+    .popup-close:hover {
+      color: #c0392b;
+      transform: scale(1.1);
+    }
+
+    #popup-content h3 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 8px;
+    }
+
+    #popup-content ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #popup-content li {
+      background-color: #f7f9fb;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    #popup-content strong {
+      color: #3498db;
+    }
+
+    .today {
+      border: 2px solid #3498db;
+      font-weight: bold;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 99;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9) translate(-50%, -50%); }
+      to { opacity: 1; transform: scale(1) translate(-50%, -50%); }
+    }
+
+    @media (max-width: 768px) {
+      td {
+        height: 60px;
+        font-size: 12px;
+      }
+
+      .popup {
+        width: 90%;
+        max-width: none;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      h2 a {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>
+    <a href="?month={{ prev_month }}&year={{ prev_year }}">&laquo; Prev</a>
+    &nbsp; {{ month }}/{{ year }} &nbsp;
+    <a href="?month={{ next_month }}&year={{ next_year }}">Next &raquo;</a>
+  </h2>
+
+  <button class="export-btn" onclick="exportCSV()">Download Calendar Data</button>
+
+  {{ calendar|safe }}
+
+  <div class="overlay" id="overlay"></div>
+  <div class="popup" id="popup">
+    <span class="popup-close" onclick="closePopup()">✖</span>
+    <div id="popup-content"></div>
+  </div>
+
+  <script>
+    const statusData = {{ status_data|safe }};
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    function exportCSV() {
+      let csv = "Date,Slapi Stage,Slapi Status,Actual Release Date,Expected Release Date\n";
+      for (const [date, data] of Object.entries(statusData)) {
+        csv += `"${date}","${data["Slapi Stage"] || ''}","${data["Slapi status"] || ''}","${data["Actual Release Date"] || ''}","${data["Expected Release Date"] || ''}"\n`;
+      }
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "calendar_data.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+      const date = cell.getAttribute('data-date');
+      const data = statusData[date];
+
+      // Add colored dots inside calendar cell
+      if (data && data["Slapi status"]) {
+        const dot = document.createElement('span');
+        dot.classList.add('event-dot');
+
+        if (data["Slapi status"].toLowerCase().includes("present")) {
+          dot.classList.add('dot-present');
+        } else if (data["Slapi status"].toLowerCase().includes("absent")) {
+          dot.classList.add('dot-absent');
+        } else if (data["Slapi status"].toLowerCase().includes("holiday")) {
+          dot.classList.add('dot-holiday');
+        }
+
+        cell.appendChild(dot);
+      }
+
+      cell.addEventListener('click', () => {
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        const content = document.getElementById('popup-content');
+
+        if (data) {
+          content.innerHTML = `
+            <h3>Details for ${date}</h3>
+            <ul>
+              <li><strong>Slapi Stage:</strong> ${data["Slapi Stage"] || 'N/A'}</li>
+              <li><strong>Slapi Status:</strong> ${data["Slapi status"] || 'N/A'}</li>
+              <li><strong>Actual Release Date:</strong> ${data["Actual Release Date"] || 'N/A'}</li>
+              <li><strong>Expected Release Date:</strong> ${data["Expected Release Date"] || 'N/A'}</li>
+            </ul>
+          `;
+        } else {
+          content.innerHTML = `<h3>${date}</h3><p>No data available.</p>`;
+        }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+      });
+    });
+
+    document.getElementById('overlay').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePopup();
+    });
+  </script>
+</body>
+</html>
